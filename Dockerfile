@@ -2,15 +2,11 @@
 # Alpine would be nice, but it's linked again musl and breaks the bitcoin core download binary
 #FROM alpine:latest
 
-FROM ubuntu:latest AS builder
+FROM debian:latest AS builder
 ARG TARGETARCH
 
 FROM builder AS builder_amd64
 ENV ARCH=x86_64
-FROM builder AS builder_arm64
-ENV ARCH=aarch64
-FROM builder AS builder_riscv64
-ENV ARCH=riscv64
 
 FROM builder_${TARGETARCH} AS build
 
@@ -25,27 +21,20 @@ RUN apt update \
     wget \
     && apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-ARG VERSION=27.1
-ARG BITCOIN_CORE_SIGNATURE=71A3B16735405025D447E8F274810B012346C9A6
-
+ARG VERSION=v28.0
 # Don't use base image's bitcoin package for a few reasons:
 # 1. Would need to use ppa/latest repo for the latest release.
 # 2. Some package generates /etc/bitcoin.conf on install and that's dangerous to bake in with Docker Hub.
 # 3. Verifying pkg signature from main website should inspire confidence and reduce chance of surprises.
 # Instead fetch, verify, and extract to Docker image
 RUN cd /tmp \
-    && gpg --keyserver hkp://keyserver.ubuntu.com --recv-keys ${BITCOIN_CORE_SIGNATURE} \
-    && wget https://bitcoincore.org/bin/bitcoin-core-${VERSION}/SHA256SUMS.asc \
-    https://bitcoincore.org/bin/bitcoin-core-${VERSION}/SHA256SUMS \
-    https://bitcoincore.org/bin/bitcoin-core-${VERSION}/bitcoin-${VERSION}-${ARCH}-linux-gnu.tar.gz \
-    && gpg --verify --status-fd 1 --verify SHA256SUMS.asc SHA256SUMS 2>/dev/null | grep "^\[GNUPG:\] VALIDSIG.*${BITCOIN_CORE_SIGNATURE}\$" \
-    && sha256sum --ignore-missing --check SHA256SUMS \
-    && tar -xzvf bitcoin-${VERSION}-${ARCH}-linux-gnu.tar.gz -C /opt \
-    && ln -sv bitcoin-${VERSION} /opt/bitcoin \
+    && wget https://github.com/levinster82/bitcoin/releases/download/libre-relay-v28.0/libre-relay-v28.0.tar.gz
+    && tar -xzvf libre-relay-${VERSION}.tar.gz -C /opt \
+    && ln -sv libre-relay-${VERSION} /opt/bitcoin \
     && /opt/bitcoin/bin/test_bitcoin --show_progress \
     && rm -v /opt/bitcoin/bin/test_bitcoin /opt/bitcoin/bin/bitcoin-qt
 
-FROM ubuntu:latest
+FROM debian:latest
 LABEL maintainer="Kyle Manna <kyle@kylemanna.com>"
 
 ENTRYPOINT ["docker-entrypoint.sh"]
