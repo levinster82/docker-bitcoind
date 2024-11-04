@@ -1,3 +1,14 @@
+bitcoind docker build for x86_64 hardware.<br>
+warning the docker image size is huge. sorry.<br>
+bitcoind build credit Peter Todd's libre-relay. (https://github.com/petertodd/bitcoin/tree/libre-relay-v28.0)<br>
+docker-bitcoind credit Kyle Manna. (https://github.com/kylemanna/docker-bitcoind)<br>
+<br>
+levinster82<br>
+<br>
+--<br>
+<br>
+<br>
+
 Bitcoind for Docker
 ===================
 
